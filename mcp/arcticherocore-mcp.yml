@@ -1,0 +1,10 @@
+generated: "2026-09-25"
+method: "probed"
+source: "https://docs.bouncewatch.com/mcp/overview.md"
+deployment:
+  mode: remote
+  endpoint: "https://api.bouncewatch.com/api/v1/mcp"
+  install: null
+  package: null
+  auth: oauth
+  verified: probed

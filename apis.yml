@@ -1,23 +1,56 @@
 aid: arcticherocore
+
 name: Arcticherocore
-description: 'Arcticherocore is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+
+description: 'Arcticherocore is a stub company identified in the API Evangelist secondary-market harvest. It currently lacks a publicly accessible website or detailed public information. The company appears in equity and investment listings but its own domain does not resolve, and no official API documentation or developer portal is discoverable. This entry serves as a placeholder for future enrichment as more data becomes available.'
+
 url: https://raw.githubusercontent.com/api-evangelist/arcticherocore/refs/heads/main/apis.yml
+
 x-type: company
+
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
+
+x-tier: profiled
+x-tier-reason: enrichment pass 2026-09-25 (modular-v1; was harvest)
+
 specificationVersion: '0.20'
+
 created: '2026-09-25'
+
 modified: '2026-09-25'
+
 tags:
 - Company
-apis: []
+- Technology
+- Finance
+- Startup
+- Arctic
+
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+
 common:
-- type: Website
-  url: https://equityzen.com/company/arcticherocore
+
+  - type: Hosts
+    url: hosts/arcticherocore-hosts.yml
+  - type: Vendors
+    url: vendors/arcticherocore-vendors.yml
+  - type: DomainSecurity
+    url: security/arcticherocore-domain-security.yml
+  - type: MCPServer
+    url: mcp/arcticherocore-mcp.yml
+  - type: WellKnown
+    url: well-known/arcticherocore-well-known.yml
+  - type: Website
+    url: https://equityzen.com/company/arcticherocore
+
+apis: []
+x-enrichment:
+  date: '2026-09-25'
+  status: enriched
+  artifacts_added: 6
+  pass: modular-v1
+  engine: identity=local,contract=local,surfaces=local,docs=local

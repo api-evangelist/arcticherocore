@@ -1,0 +1,1 @@
+{"resource":"https:\/\/api.bouncewatch.com\/api\/v1\/mcp","authorization_servers":["https:\/\/api.bouncewatch.com"],"scopes_supported":["mcp:read","mcp:write"],"bearer_methods_supported":["header"],"resource_documentation":"https:\/\/docs.bouncewatch.com\/mcp\/overview"}
