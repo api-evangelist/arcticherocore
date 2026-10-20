@@ -35,3 +35,311 @@ tool_quality:
   scored: false
   note: Facts from the saved tools/list capture (mcp_tool_quality.py); recorded, not scored. Checks learned
     from Glimind's agent-readiness audit.
+tools:
+- name: search_signals
+  description: 'The latest signals across the whole index: which companies did something recently,
+
+    what it was, and when.
+
+
+    This is the tool for ANY question about what is happening. "Show me the latest
+
+    signals", "what''s new", "which companies raised a round and are now hiring sales in
+
+    the Netherlands", "who announced expansion in the last two weeks", "which of my
+
+    target segment just made a key hire". Returns matching companies with the signals
+
+    that matched and their dates.
+
+
+    Reach for this first. check_watches only reports on companies already being
+
+    watched by this key and cannot answer a question about the market or about a
+
+    company that is not on that list.
+
+
+    Filter by signal type, category, recency, country, headcount and funding stage.
+
+    Call get_signal_taxonomy first if you are unsure which signal keys exist —
+
+    unrecognised keys are rejected rather than quietly returning nothing.
+
+
+    The two signal filters WIDEN each other rather than narrowing to the overlap: a
+
+    category adds all of its keys to whatever signal_keys already lists. min_weight
+
+    then cuts what is left, so a low-weight signal type named alongside a floor above
+
+    its own weight returns nothing rather than one of the two being quietly ignored.
+
+
+    `coverage` is working material for you, not for the answer: it bounds what this
+
+    search could have found. Let it shape what you claim, and offer a narrower search
+
+    rather than reporting figures about our index.
+
+
+    Cost: 12 credits per call. Failed calls are not charged.'
+- name: search_companies
+  description: 'Finds companies by firmographics — country, headcount, funding stage — within the
+
+    set BounceWatch actively observes, most recently refreshed first.
+
+
+    By default it returns only companies we have observed in the last 90 days, so the
+
+    firmographics you get are backed by recent observation rather than a record we
+
+    last touched years ago. Each result reports its signal activity, so you can tell a
+
+    closely-watched company from a thinly-covered one.
+
+
+    If you want companies selected by what HAPPENED to them rather than by what they
+
+    ARE — recently funded, hiring, expanding — use search_signals instead. That is the
+
+    stronger discovery path and usually the one you want.
+
+
+    Cost: 5 credits per call. Failed calls are not charged.'
+- name: find_company
+  description: 'Finds a company in the BounceWatch index by name, and returns its domain — which
+
+    is what every other company tool needs.
+
+
+    Use this whenever you have a company''s NAME rather than its domain. Do not guess
+
+    the domain: a wrong guess comes back as "not indexed" for a company we actually
+
+    hold, and sends you on to spend a scan on a domain nobody checked.
+
+
+    Returns up to a handful of candidates with just enough to tell them apart —
+
+    country, founding year, headcount, and when we last saw a signal. It never picks
+
+    for you: names are ambiguous and you have the context that decides. If several
+
+    look plausible, say so rather than choosing silently. Once you have picked,
+
+    get_company returns the full profile.
+
+
+    An empty result means no company by that name is in our index. It is not a
+
+    statement about whether the company exists. If you know its domain,
+
+    refresh_company indexes it.
+
+
+    Cost: 3 credits per call. Failed calls are not charged.'
+- name: get_company
+  description: 'Firmographic profile of one company from the BounceWatch index: identity, location,
+
+    headcount, funding history, tech stack, team and competitors.
+
+
+    Returns what we currently hold — it never triggers a scan on its own. `coverage` says
+
+    what monitoring this company is under; if it is not being followed continuously and
+
+    the answer depends on facts being current, call refresh_company explicitly.
+
+
+    For what has been HAPPENING at a company rather than what it IS, use
+
+    get_company_signals.
+
+
+    Cost: 10 credits per call at minimum, rising with the extra data you request. Failed calls are not
+    charged.'
+- name: get_company_signals
+  description: 'Returns the dated signal timeline for one company: funding, hiring, partnerships,
+
+    expansion, product launches, leadership changes and risk events.
+
+
+    Use this when you already know which company you care about and need to know what
+
+    has been happening and when. To find companies by signal instead, use search_signals.
+
+
+    categories and signal_keys widen each other rather than narrowing to the overlap:
+
+    a category adds all of its keys to whatever signal_keys already lists.
+
+
+    Read `coverage` before drawing conclusions. If `coverage.signal_absence_is_meaningful`
+
+    is false, an empty or thin result reflects our scanning gap, not the company — say
+
+    so rather than reporting the company as quiet.
+
+
+    Cost: 8 credits per call. Failed calls are not charged.'
+- name: refresh_company
+  description: "Queues a fresh scan of one company and returns a batch id to poll with\nget_refresh_status.\
+    \ Works for companies already in the index and for domains we\nhave never seen, which is how you add\
+    \ one.\n\nA scan only refreshes what you ask for, and each module reads a different source.\nAnything\
+    \ you leave out keeps the date it already had, so pick by the fact you\nneed:\n\n  signals      recent\
+    \ events and announcements   (default)\n  funding      rounds, investors, valuations     (default)\n\
+    \  team         headcount, leadership, open roles\n  technology   tech stack\n  business     positioning,\
+    \ model, target market\n  competitors  similar companies\n\nThe default is signals + funding, because\
+    \ those are the two that go out of date\nfastest and the two most answers turn on. Pass modules explicitly\
+    \ to go cheaper —\n`[\"signals\"]` alone is the least you can usefully scan.\n\nThis spends credits\
+    \ and real scanning budget, so call it deliberately: when\n`coverage` on a previous answer showed\
+    \ stale data AND the decision depends on\ncurrent facts. Do not call it speculatively across a list\
+    \ of candidates.\n\nReturns in a second or two; the scan itself typically takes 60-180 seconds.\n\
+    Poll get_refresh_status (free) until it reports finished, then re-read the data\nwith get_company\
+    \ or get_company_signals.\n\nCost: 36 credits per call at minimum, rising with the extra data you\
+    \ request. Failed calls are not charged."
+- name: get_refresh_status
+  description: 'Checks a scan queued by refresh_company, and WAITS for it.
+
+
+    This call blocks until the scan is done or `wait_seconds` runs out, so you do not
+
+    have to idle between polls — just call it again if it comes back unfinished. A
+
+    typical scan needs two or three calls at the default wait.
+
+
+    Read `is_finished`, not `status`. A scan reaches `completed` when its jobs report
+
+    back, but the signal analysis they started is still writing rows for a few seconds
+
+    after that — read too early and you get the pre-scan picture with a completed
+
+    stamp on it. `status` becomes `settling` for that window and `is_finished` stays
+
+    false until the writes stop.
+
+
+    Do not answer from the old data while a scan you asked for is unfinished: you
+
+    requested it because the existing figures were too stale to rely on, and they have
+
+    not changed yet. Either wait for it, or say plainly that a refresh is in flight.
+
+
+    When it finishes, `signals_added` says how many new signals the scan actually
+
+    produced — zero is a real answer and means we looked and found nothing new, not
+
+    that the scan failed. Then read the data with get_company or get_company_signals;
+
+    this tool returns progress, not company data.
+
+
+    Cost: free — call it as often as you need.'
+- name: watch_company
+  description: 'Registers a standing watch on one company, so you find out what happened there
+
+    without asking again. This is the only tool that persists between sessions.
+
+
+    A watched company is kept under continuous monitoring — we keep looking at it for
+
+    as long as the watch is active, rather than waiting for someone to ask about it.
+
+
+    Matching signals are queued for you and collected with check_watches (free). If
+
+    this API key has a webhook URL configured, set deliver_webhook to also have them
+
+    pushed to it as they land — that is what lets a hosted agent be woken rather than
+
+    having to poll.
+
+
+    Narrow it. A watch with no filters delivers everything, including the background
+
+    chatter that makes a feed unreadable: pass signal_keys for the events you care
+
+    about, or min_weight to set a floor on how much a signal has to matter. Given both,
+
+    a signal has to clear both — a named key that sits below the floor never fires.
+
+
+    Call again with the same domain to change the filters, or with stop:true to end
+
+    the watch. Watching a domain we have not indexed is allowed, but nothing will fire
+
+    until it is — refresh_company indexes it.
+
+
+    Cost: 5 credits per call. Failed calls are not charged.'
+- name: check_watches
+  description: 'Returns what has happened at the companies THIS KEY ALREADY WATCHES, since the
+
+    last time you asked.
+
+
+    This is a personal inbox, not a view of the index. Use it when the question is
+
+    about continuity — "anything new since last time", "what did I miss", "what fired
+
+    on my watchlist". If the question is what is happening at companies generally —
+
+    latest signals, who raised, who is hiring, anything about the market or a company
+
+    not already watched — that is search_signals, and this tool cannot answer it.
+
+
+    Do not open a session with this call. Answer what was actually asked first; reach
+
+    for this when the user''s question is about their own watches.
+
+
+    Each event is handed over once: collecting it marks it seen, so the next call
+
+    returns only what is new. Pass include_acknowledged to re-read ones you already
+
+    collected.
+
+
+    An empty result means nothing matched YOUR watches. It is not a statement about
+
+    the market, and if you hold no watches it says nothing at all — the response
+
+    reports how many you have so the two cases can be told apart.
+
+
+    The response also lists your active watches, so this is the only call needed to
+
+    see both what fired and what is armed.
+
+
+    Cost: free — call it as often as you need.'
+- name: get_signal_taxonomy
+  description: 'Lists every signal type BounceWatch detects, grouped by category, with what each
+
+    one means and whether it is an announcement or an unconfirmed inference.
+
+
+    It also returns `coverage`, which says which categories produce steadily and which
+
+    are rare by nature. Read it before designing a search: the rarest signals are the
+
+    highest-value ones — funding, acquisitions, shutdowns — and searching a window for
+
+    them usually returns almost nothing, because that is how often they happen. Those
+
+    are caught with watch_company, not with a query.
+
+
+    Call this before filtering by signal type in search_signals or get_company_signals:
+
+    filters are matched exactly, and an unrecognised key returns nothing rather than
+
+    an error. The answer is stable, so once per session is enough.
+
+
+    Cost: free — call it as often as you need.'
+tools_count: 10
