@@ -1,10 +1,37 @@
-generated: "2026-09-25"
-method: "probed"
-source: "https://docs.bouncewatch.com/mcp/overview.md"
+generated: '2026-09-25'
+method: probed
+source: https://docs.bouncewatch.com/mcp/overview.md
 deployment:
   mode: remote
-  endpoint: "https://api.bouncewatch.com/api/v1/mcp"
+  endpoint: https://api.bouncewatch.com/api/v1/mcp
   install: null
   package: null
   auth: oauth
   verified: probed
+tool_quality:
+  tool_count: 10
+  tokens_total: 5661
+  tokens_per_tool_median: 495
+  heavy_tools:
+  - name: search_signals
+    tokens: 1212
+  heavy_tool_count: 1
+  params_total: 44
+  params_undescribed: 0
+  params_described_pct: 100.0
+  tools_with_undescribed_params: 0
+  tools_annotated: 10
+  annotated_pct: 100.0
+  state_changing_unhinted: []
+  tools_missing_schema: 0
+  short_descriptions: 0
+  duplicate_descriptions: 0
+  duplicate_names: 0
+  nonportable_names: []
+  output_schema_count: 0
+  token_estimate: chars/3.6 of each compact tool definition
+  source: mcp/arcticherocore-mcp-tools.json
+  measured: '2026-10-20'
+  scored: false
+  note: Facts from the saved tools/list capture (mcp_tool_quality.py); recorded, not scored. Checks learned
+    from Glimind's agent-readiness audit.

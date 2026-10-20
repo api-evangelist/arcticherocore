@@ -1,0 +1,420 @@
+{
+  "endpoint": "https://api.bouncewatch.com/api/v1/mcp",
+  "captured": "2026-10-20",
+  "method": "initialize + tools/list (anonymous, no tool called; roadmap#992)",
+  "protocol_version": "2025-06-18",
+  "server_info": {
+    "name": "bouncewatch",
+    "title": "BounceWatch Signal Intelligence",
+    "version": "1.2.0"
+  },
+  "result": {
+    "tools": [
+      {
+        "name": "search_signals",
+        "title": "Search Signals",
+        "description": "The latest signals across the whole index: which companies did something recently,\nwhat it was, and when.\n\nThis is the tool for ANY question about what is happening. \"Show me the latest\nsignals\", \"what's new\", \"which companies raised a round and are now hiring sales in\nthe Netherlands\", \"who announced expansion in the last two weeks\", \"which of my\ntarget segment just made a key hire\". Returns matching companies with the signals\nthat matched and their dates.\n\nReach for this first. check_watches only reports on companies already being\nwatched by this key and cannot answer a question about the market or about a\ncompany that is not on that list.\n\nFilter by signal type, category, recency, country, headcount and funding stage.\nCall get_signal_taxonomy first if you are unsure which signal keys exist —\nunrecognised keys are rejected rather than quietly returning nothing.\n\nThe two signal filters WIDEN each other rather than narrowing to the overlap: a\ncategory adds all of its keys to whatever signal_keys already lists. min_weight\nthen cuts what is left, so a low-weight signal type named alongside a floor above\nits own weight returns nothing rather than one of the two being quietly ignored.\n\n`coverage` is working material for you, not for the answer: it bounds what this\nsearch could have found. Let it shape what you claim, and offer a narrower search\nrather than reporting figures about our index.\n\nCost: 12 credits per call. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "signal_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Signal types to match, e.g. [\"recently_funded\",\"key_hire_announced\"]. See get_signal_taxonomy."
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Signal categories to match: funding, hiring, business, product, growth, event, milestone, risk."
+            },
+            "days": {
+              "type": "integer",
+              "description": "Lookback window in days. Default 30. Max 365. Shorter windows mean sharper timing."
+            },
+            "country": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 country code of the company HQ, e.g. \"NL\", \"DE\", \"US\"."
+            },
+            "min_employees": {
+              "type": "integer",
+              "description": "Minimum headcount. Companies whose headcount we do not hold are excluded when this is set — not knowing a number is not evidence it falls outside the range."
+            },
+            "max_employees": {
+              "type": "integer",
+              "description": "Maximum headcount. Same exclusion of unknown headcounts as min_employees."
+            },
+            "funding_stage": {
+              "type": "string",
+              "description": "Funding stage, e.g. \"Seed\", \"Series A\", \"Pre Seed\". Spacing, case and hyphens are normalised; a value that matches nothing is rejected with the valid list rather than returning a near-empty result. This is the costliest filter here: a company whose stage we do not hold is excluded rather than guessed at, so it narrows the field twice — once by stage, once by what we know."
+            },
+            "require_all_keys": {
+              "type": "boolean",
+              "description": "When true, only return companies showing EVERY requested signal key in the window (signal stacking) rather than any of them. Default false."
+            },
+            "min_weight": {
+              "type": "integer",
+              "description": "Only count signals worth at least this much, 1-10. Background chatter (event attendance, news mentions, follower drift) sits at 1-2 and dominates an unfiltered result; 3 or 4 searches on substance and is the useful setting. Above 7 you are asking for rare events — funding, acquisitions, shutdowns are seldom what a window contains, because that is how often they happen, not how well we see them. Searching for those usually returns little; watch_company is how you catch them. Default 0 (everything)."
+            },
+            "founded_after": {
+              "type": "integer",
+              "description": "Only companies founded in or after this year, e.g. 2023. Companies whose founding year we do not hold are excluded when this is set, and the result says so."
+            },
+            "founded_before": {
+              "type": "integer",
+              "description": "Only companies founded in or before this year. Same exclusion of unknown founding years as founded_after."
+            },
+            "sort": {
+              "type": "string",
+              "enum": [
+                "most_recent",
+                "most_active"
+              ],
+              "description": "most_recent (default) ranks by newest matching signal; most_active by how many matched."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max companies to return. Default 25, max 100."
+            }
+          },
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Search Signals",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "search_companies",
+        "title": "Search Companies",
+        "description": "Finds companies by firmographics — country, headcount, funding stage — within the\nset BounceWatch actively observes, most recently refreshed first.\n\nBy default it returns only companies we have observed in the last 90 days, so the\nfirmographics you get are backed by recent observation rather than a record we\nlast touched years ago. Each result reports its signal activity, so you can tell a\nclosely-watched company from a thinly-covered one.\n\nIf you want companies selected by what HAPPENED to them rather than by what they\nARE — recently funded, hiring, expanding — use search_signals instead. That is the\nstronger discovery path and usually the one you want.\n\nCost: 5 credits per call. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "country": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 country code of the company HQ, e.g. \"NL\", \"DE\", \"US\"."
+            },
+            "min_employees": {
+              "type": "integer",
+              "description": "Minimum headcount. Companies whose headcount we do not hold are excluded when this is set — same rule as founded_after, and for the same reason: not knowing a number is not evidence it falls outside the range."
+            },
+            "max_employees": {
+              "type": "integer",
+              "description": "Maximum headcount. Same exclusion of unknown headcounts as min_employees."
+            },
+            "funding_stage": {
+              "type": "string",
+              "description": "Funding stage, e.g. \"Seed\", \"Series A\", \"Pre Seed\". Spacing, case and hyphens are normalised; a value that matches nothing is rejected with the valid list rather than returning a near-empty result. This is the costliest filter here: a company whose stage we do not hold is excluded rather than guessed at, so it narrows the field twice — once by stage, once by what we know."
+            },
+            "observed_within_days": {
+              "type": "integer",
+              "description": "Only companies we observed within this many days, 30-365. Default 90. Widening it grows the result set but lowers confidence in the firmographics, because the record is older. There is no way to switch this off — pass 0 and the widest available window (365) runs instead, and the answer says so. This tool covers the companies we watch, not the whole market."
+            },
+            "founded_after": {
+              "type": "integer",
+              "description": "Only companies founded in or after this year, e.g. 2023. Companies whose founding year we do not hold are excluded when this is set, and the result says so."
+            },
+            "founded_before": {
+              "type": "integer",
+              "description": "Only companies founded in or before this year. Same exclusion of unknown founding years as founded_after."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max companies to return. Default 20, max 50."
+            }
+          },
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Search Companies",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "find_company",
+        "title": "Find Company",
+        "description": "Finds a company in the BounceWatch index by name, and returns its domain — which\nis what every other company tool needs.\n\nUse this whenever you have a company's NAME rather than its domain. Do not guess\nthe domain: a wrong guess comes back as \"not indexed\" for a company we actually\nhold, and sends you on to spend a scan on a domain nobody checked.\n\nReturns up to a handful of candidates with just enough to tell them apart —\ncountry, founding year, headcount, and when we last saw a signal. It never picks\nfor you: names are ambiguous and you have the context that decides. If several\nlook plausible, say so rather than choosing silently. Once you have picked,\nget_company returns the full profile.\n\nAn empty result means no company by that name is in our index. It is not a\nstatement about whether the company exists. If you know its domain,\nrefresh_company indexes it.\n\nCost: 3 credits per call. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Company name to look for, e.g. \"Silk and Cashmere\". A domain is also accepted and resolved directly."
+            },
+            "country": {
+              "type": "string",
+              "description": "ISO 3166-1 alpha-2 code of the company HQ, e.g. \"NL\". Narrows an ambiguous name; a code that matches nothing is rejected rather than silently ignored."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max candidates to return. Default 5, max 10."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Find Company",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "get_company",
+        "title": "Get Company",
+        "description": "Firmographic profile of one company from the BounceWatch index: identity, location,\nheadcount, funding history, tech stack, team and competitors.\n\nReturns what we currently hold — it never triggers a scan on its own. `coverage` says\nwhat monitoring this company is under; if it is not being followed continuously and\nthe answer depends on facts being current, call refresh_company explicitly.\n\nFor what has been HAPPENING at a company rather than what it IS, use\nget_company_signals.\n\nCost: 10 credits per call at minimum, rising with the extra data you request. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "description": "Company domain, e.g. \"stripe.com\". URLs are accepted and normalised."
+            },
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "business",
+                  "technology",
+                  "funding",
+                  "team",
+                  "competitors"
+                ]
+              },
+              "description": "Optional enrichment modules: business, technology, funding, team, competitors. Each adds credits — request only what you will use."
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Get Company",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "get_company_signals",
+        "title": "Get Company Signals",
+        "description": "Returns the dated signal timeline for one company: funding, hiring, partnerships,\nexpansion, product launches, leadership changes and risk events.\n\nUse this when you already know which company you care about and need to know what\nhas been happening and when. To find companies by signal instead, use search_signals.\n\ncategories and signal_keys widen each other rather than narrowing to the overlap:\na category adds all of its keys to whatever signal_keys already lists.\n\nRead `coverage` before drawing conclusions. If `coverage.signal_absence_is_meaningful`\nis false, an empty or thin result reflects our scanning gap, not the company — say\nso rather than reporting the company as quiet.\n\nCost: 8 credits per call. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "description": "Company domain, e.g. \"stripe.com\". URLs are accepted and normalised."
+            },
+            "days": {
+              "type": "integer",
+              "description": "Lookback window in days. Default 90, max 365.",
+              "minimum": 1,
+              "maximum": 365
+            },
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Restrict to signal categories (funding, hiring, business, product, growth, event, milestone, risk). Call get_signal_taxonomy for the list."
+            },
+            "signal_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Restrict to exact signal keys, e.g. [\"recently_funded\",\"key_hire_announced\"]. Unrecognised keys are rejected rather than silently ignored."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max signals to return, newest first. Default 50, max 100."
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Get Company Signals",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "refresh_company",
+        "title": "Refresh Company",
+        "description": "Queues a fresh scan of one company and returns a batch id to poll with\nget_refresh_status. Works for companies already in the index and for domains we\nhave never seen, which is how you add one.\n\nA scan only refreshes what you ask for, and each module reads a different source.\nAnything you leave out keeps the date it already had, so pick by the fact you\nneed:\n\n  signals      recent events and announcements   (default)\n  funding      rounds, investors, valuations     (default)\n  team         headcount, leadership, open roles\n  technology   tech stack\n  business     positioning, model, target market\n  competitors  similar companies\n\nThe default is signals + funding, because those are the two that go out of date\nfastest and the two most answers turn on. Pass modules explicitly to go cheaper —\n`[\"signals\"]` alone is the least you can usefully scan.\n\nThis spends credits and real scanning budget, so call it deliberately: when\n`coverage` on a previous answer showed stale data AND the decision depends on\ncurrent facts. Do not call it speculatively across a list of candidates.\n\nReturns in a second or two; the scan itself typically takes 60-180 seconds.\nPoll get_refresh_status (free) until it reports finished, then re-read the data\nwith get_company or get_company_signals.\n\nCost: 36 credits per call at minimum, rising with the extra data you request. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "description": "Company domain, e.g. \"stripe.com\". URLs are accepted and normalised."
+            },
+            "modules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "business",
+                  "technology",
+                  "funding",
+                  "team",
+                  "signals",
+                  "competitors"
+                ]
+              },
+              "description": "What to refresh: business, technology, funding, team, signals, competitors. Each adds credits. Defaults to signals only, which is the cheapest useful scan."
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Refresh Company",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "get_refresh_status",
+        "title": "Get Refresh Status",
+        "description": "Checks a scan queued by refresh_company, and WAITS for it.\n\nThis call blocks until the scan is done or `wait_seconds` runs out, so you do not\nhave to idle between polls — just call it again if it comes back unfinished. A\ntypical scan needs two or three calls at the default wait.\n\nRead `is_finished`, not `status`. A scan reaches `completed` when its jobs report\nback, but the signal analysis they started is still writing rows for a few seconds\nafter that — read too early and you get the pre-scan picture with a completed\nstamp on it. `status` becomes `settling` for that window and `is_finished` stays\nfalse until the writes stop.\n\nDo not answer from the old data while a scan you asked for is unfinished: you\nrequested it because the existing figures were too stale to rely on, and they have\nnot changed yet. Either wait for it, or say plainly that a refresh is in flight.\n\nWhen it finishes, `signals_added` says how many new signals the scan actually\nproduced — zero is a real answer and means we looked and found nothing new, not\nthat the scan failed. Then read the data with get_company or get_company_signals;\nthis tool returns progress, not company data.\n\nCost: free — call it as often as you need.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "batch_id": {
+              "type": "string",
+              "description": "The batch_id returned by refresh_company."
+            },
+            "wait_seconds": {
+              "type": "integer",
+              "description": "How long this call may block waiting for the scan, 0-25. Default 20. It returns the moment the scan finishes, and waiting the full 25 costs exactly what waiting 1 costs — so there is nothing to gain by polling with a low value."
+            }
+          },
+          "required": [
+            "batch_id"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Get Refresh Status",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "watch_company",
+        "title": "Watch Company",
+        "description": "Registers a standing watch on one company, so you find out what happened there\nwithout asking again. This is the only tool that persists between sessions.\n\nA watched company is kept under continuous monitoring — we keep looking at it for\nas long as the watch is active, rather than waiting for someone to ask about it.\n\nMatching signals are queued for you and collected with check_watches (free). If\nthis API key has a webhook URL configured, set deliver_webhook to also have them\npushed to it as they land — that is what lets a hosted agent be woken rather than\nhaving to poll.\n\nNarrow it. A watch with no filters delivers everything, including the background\nchatter that makes a feed unreadable: pass signal_keys for the events you care\nabout, or min_weight to set a floor on how much a signal has to matter. Given both,\na signal has to clear both — a named key that sits below the floor never fires.\n\nCall again with the same domain to change the filters, or with stop:true to end\nthe watch. Watching a domain we have not indexed is allowed, but nothing will fire\nuntil it is — refresh_company indexes it.\n\nCost: 5 credits per call. Failed calls are not charged.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "description": "Company domain, e.g. \"stripe.com\". URLs are accepted and normalised."
+            },
+            "signal_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Only these signal types wake you. Omit for all of them. Values come from get_signal_taxonomy; an unrecognised key is rejected with the valid list rather than creating a watch that silently matches nothing."
+            },
+            "min_weight": {
+              "type": "integer",
+              "description": "Floor on how much a signal has to matter, 1-10. Roughly: 8+ funding and leadership changes, 5+ hiring and expansion, below 4 background noise. Signals we do not weight never clear a floor."
+            },
+            "label": {
+              "type": "string",
+              "description": "Your own note for this watch, e.g. \"Q3 pipeline\". Returned with every event so you can route it without a second lookup."
+            },
+            "deliver_webhook": {
+              "type": "boolean",
+              "description": "Also push matches to this key's configured webhook URL. Default false. Events are queued for check_watches either way."
+            },
+            "stop": {
+              "type": "boolean",
+              "description": "Ends the watch on this domain. Already-queued events stay collectable."
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Watch Company",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "check_watches",
+        "title": "Check Watches",
+        "description": "Returns what has happened at the companies THIS KEY ALREADY WATCHES, since the\nlast time you asked.\n\nThis is a personal inbox, not a view of the index. Use it when the question is\nabout continuity — \"anything new since last time\", \"what did I miss\", \"what fired\non my watchlist\". If the question is what is happening at companies generally —\nlatest signals, who raised, who is hiring, anything about the market or a company\nnot already watched — that is search_signals, and this tool cannot answer it.\n\nDo not open a session with this call. Answer what was actually asked first; reach\nfor this when the user's question is about their own watches.\n\nEach event is handed over once: collecting it marks it seen, so the next call\nreturns only what is new. Pass include_acknowledged to re-read ones you already\ncollected.\n\nAn empty result means nothing matched YOUR watches. It is not a statement about\nthe market, and if you hold no watches it says nothing at all — the response\nreports how many you have so the two cases can be told apart.\n\nThe response also lists your active watches, so this is the only call needed to\nsee both what fired and what is armed.\n\nCost: free — call it as often as you need.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "description": "Max events to return. Default 25, max 100. Anything beyond the limit stays queued for the next call."
+            },
+            "domain": {
+              "type": "string",
+              "description": "Only events for this watched domain."
+            },
+            "include_acknowledged": {
+              "type": "boolean",
+              "description": "Also return events already collected, and do not acknowledge anything on this call. Use when you lost context and need to re-read. Default false."
+            }
+          },
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Check Watches",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      },
+      {
+        "name": "get_signal_taxonomy",
+        "title": "Get Signal Taxonomy",
+        "description": "Lists every signal type BounceWatch detects, grouped by category, with what each\none means and whether it is an announcement or an unconfirmed inference.\n\nIt also returns `coverage`, which says which categories produce steadily and which\nare rare by nature. Read it before designing a search: the rarest signals are the\nhighest-value ones — funding, acquisitions, shutdowns — and searching a window for\nthem usually returns almost nothing, because that is how often they happen. Those\nare caught with watch_company, not with a query.\n\nCall this before filtering by signal type in search_signals or get_company_signals:\nfilters are matched exactly, and an unrecognised key returns nothing rather than\nan error. The answer is stable, so once per session is enough.\n\nCost: free — call it as often as you need.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "annotations": {
+          "title": "Get Signal Taxonomy",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        }
+      }
+    ]
+  }
+}
